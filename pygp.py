@@ -19,17 +19,25 @@ mod = SourceModule("""
 		__device__ static float dot(Vec3 v1, Vec3 v2) {
 			return (v1.x*v2.x + v1.y*v2.y + v1.z*v2.z);
 		}
+		__device__ Vec3 normalize() {
+			return (Vec3(x, y, z) / mag());
+		}
 		__device__ Vec3 operator + (Vec3 &vec) {
 			return (Vec3(x+vec.x, y+vec.y, z+vec.z));
 		}
 		__device__ Vec3 operator - (Vec3 &vec) {
 			return (Vec3(x-vec.x, y-vec.y, z-vec.z));
 		}
+		__device__ Vec3 operator / (float s) {
+			return (Vec3(x/s, y/s, z/s));
+		}
+		__device__ Vec3 operator * (float s) {
+			return (Vec3(s*x, s*y, s*z));
+		}
 	};
-	__device__ float getDistance(float x, float y, float z) {
-		Vec3 p(x, y, z);
-		Vec3 center(0.0, 0.0, 7.0);
-		float d = (p - center).mag();
+
+	__device__ float getDistance(Vec3 &p) {
+		float d = (p - Vec3(0.0, 0.0, 7.0)).mag();
 		return (d - 1);
 	}
 
@@ -37,27 +45,20 @@ mod = SourceModule("""
 	{
 		int subject_id = threadIdx.x + 32*blockIdx.x + 640*(threadIdx.y + 32*blockIdx.y);
 		int mesh_id = 3*subject_id;
-		float currentx = mesh[mesh_id];
-		float currenty = mesh[mesh_id+1];
-		float currentz = mesh[mesh_id+2];
-		float mag = sqrtf(currentx*currentx + currenty*currenty + currentz*currentz);
-		float dirx = currentx/mag;
-		float diry = currenty/mag;
-		float dirz = currentz/mag;
+		Vec3 currentPoint(mesh[mesh_id], mesh[mesh_id+1], mesh[mesh_id+2]);
+		Vec3 direction = currentPoint.normalize();
 		float distance = 0.0;
 		while (distance < 10) {
-			float marchDistance = getDistance(currentx, currenty, currentz);
+			float marchDistance = getDistance(currentPoint);
 			if (marchDistance < 0.001) {
 				isSubject[subject_id] = true;
-				points[mesh_id] = currentx;
-				points[mesh_id+1] = currenty;
-				points[mesh_id+2] = currentz;
+				points[mesh_id] = currentPoint.x;
+				points[mesh_id+1] = currentPoint.y;
+				points[mesh_id+2] = currentPoint.z;
 				break;
 			}
 			distance += marchDistance;
-			currentx = distance*dirx;
-			currenty = distance*diry;
-			currentz = distance*dirz;
+			currentPoint = direction * distance;
 		}
 	}
 	__global__ void shade(float *points, bool *isSubject, float *display, float sourcex, float sourcey, float sourcez) {
@@ -67,15 +68,16 @@ mod = SourceModule("""
 			float mainx = points[mesh_id];
 			float mainy = points[mesh_id+1];
 			float mainz = points[mesh_id+2];
-			float maindist = getDistance(mainx, mainy, mainz);
-			float normx = getDistance(mainx+0.001, mainy, mainz) - maindist;
-			float normy = getDistance(mainx, mainy+0.001, mainz) - maindist;
-			float normz = getDistance(mainx, mainy, mainz+0.001) - maindist;
+			float maindist = getDistance(Vec3(mainx, mainy, mainz));
+			float normx = getDistance(Vec3(mainx+0.001, mainy, mainz)) - maindist;
+			float normy = getDistance(Vec3(mainx, mainy+0.001, mainz)) - maindist;
+			float normz = getDistance(Vec3(mainx, mainy, mainz+0.001)) - maindist;
 
-			float normmag = sqrtf(normx*normx + normy*normy + normz*normz);
-			float sourcemag = sqrtf(sourcex*sourcex + sourcey*sourcey + sourcez*sourcez);
+			Vec3 unitNorm = Vec3(normx, normy, normz).normalize();
+			Vec3 unitSource = Vec3(sourcex, sourcey, sourcez).normalize();
 
-			float intensity = (normx*sourcex + normy*sourcey + normz*sourcez)/(sourcemag*normmag);
+			float intensity = Vec3::dot(unitNorm, unitSource);
+
 			if (intensity < 0)
 				intensity = 0;
 			display[subject_id] = intensity;
