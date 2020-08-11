@@ -10,7 +10,17 @@ except ModuleNotFoundError:
 
 
 class Renderer():
-	def __init__(self, ASPECT_RATIO, FIELD_OF_VIEW, NEAR_CLIPPING_PLANE, FAR_CLIPPING_PLANE, Width:int, Height:int, epsilon, useGPU=False):
+	def __init__(
+			self,
+			ASPECT_RATIO,
+			FIELD_OF_VIEW,
+			NEAR_CLIPPING_PLANE,
+			FAR_CLIPPING_PLANE,
+			Width:int,
+			Height:int,
+			epsilon,
+			useGPU=False
+			):
 		self.ASPECT_RATIO = ASPECT_RATIO;
 		self.FIELD_OF_VIEW = FIELD_OF_VIEW;
 		self.NEAR_CLIPPING_PLANE = NEAR_CLIPPING_PLANE;
@@ -44,7 +54,16 @@ class Renderer():
 			distance += marchDist
 		return intensity
 
-	def setElements(self, subjects, sources, minFunction = '__device__ float min(float a, float b) {if (a < b) return a; return b;}'):
+	def setElements(
+			self,
+			subjects,
+			sources,
+			minFunction = """
+				__device__ float min(float a, float b) {
+					if (a < b) return a;
+					return b;
+				}
+			"""):
 		self.elementsSet = True
 		if self.useGPU:
 			distanceFunc_gpu = minFunction + '__device__ float getDistance(float x, float y, float z) {float minDist = '+str(self.FAR_CLIPPING_PLANE)+';'
