@@ -7,6 +7,9 @@ class Sphere():
 		self.radius = radius
 		self.albedo = albedo
 
+	def getCudaFunc(self):
+		return f'(p - Vec3({self.center[0]}, {self.center[1]}, {self.center[2]})).mag() - {self.radius}'
+
 	def lambertian(self, point, sources):
 		vec1 = (point - self.center) / np.linalg.norm(point - self.center)
 		radiance = 0.
@@ -42,4 +45,3 @@ class Plane():
 
 	def maxDistance(self, point: np.ndarray):
 		return np.dot(point - self.point, self.normal)
-		

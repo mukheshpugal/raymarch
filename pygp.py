@@ -82,8 +82,8 @@ buffer_final = buffer_ref
 def getFrame(x, y, z):
 	march(mesh_gpu, isSubject_gpu, points_gpu, block=(32, 32, 1), grid=(20, 15, 1))
 	shade(points_gpu, isSubject_gpu, display_gpu, np.float32(x), np.float32(y), np.float32(z), block=(32, 32, 1), grid=(20, 15, 1))
-	cuda.memcpy_dtoh(buffer_final, display_gpu)
-	frame = (255*buffer_final).astype(np.uint8)
+	cuda.memcpy_dtoh(buffer_ref, display_gpu)
+	frame = (255*buffer_ref).astype(np.uint8)
 	return frame
 
 import cv2

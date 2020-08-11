@@ -7,7 +7,7 @@ class Vec3 {
 		z = zin;
 	}
 	__device__ float mag() {
-		return (sqrtf(x*x + y*y + z*z));
+		return (norm3df(x, y, z));
 	}
 	__device__ static float dot(Vec3 v1, Vec3 v2) {
 		return (v1.x*v2.x + v1.y*v2.y + v1.z*v2.z);
