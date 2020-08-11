@@ -8,7 +8,7 @@ from source import PointSource
 subjects = [
 	Sphere(np.array([0, -1, 7]), 1., 1.),
 	Plane(np.array([0, -1, 0]), np.array([0, 0, 7]))
-	
+
 	]
 sources = [
 	PointSource(np.array([10., -10., -10.]), 0.75),
@@ -21,7 +21,8 @@ renderer = Renderer(
 	FAR_CLIPPING_PLANE=10.,
 	Width=600,
 	Height=400,
-	epsilon=1e-3
+	epsilon=1e-3,
+	useGPU=True
 	)
 renderer.setElements(subjects, sources)
 

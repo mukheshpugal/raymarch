@@ -42,5 +42,4 @@ class Plane():
 
 	def maxDistance(self, point: np.ndarray):
 		return np.dot(point - self.point, self.normal)
-
-# class Capsule()
+		
