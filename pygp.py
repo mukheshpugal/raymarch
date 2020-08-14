@@ -7,60 +7,75 @@ import numpy as np
 with open('vec3.cu', 'r') as f:
 	vec3Source = f.read()
 kernelString = """
-	__device__ float getDistance(Vec3 &p) {
-		float d = (p - Vec3(0.0, 0.0, 7.0)).mag();
-		return (d - 1);
+	__device__ float sdPlane(Vec3 &p, Vec3 &n, float h)
+	{
+		// n must be normalized
+		return Vec3::dot(p, n) + h;
+	}
+	__device__ float getDistance(Vec3 &p, float maxDist=10) {
+		maxDist = min(maxDist, ((p - Vec3(0.0, 0.0, 6.0)).mag() - 0.4));
+
+		maxDist = min(maxDist, sdPlane(p, Vec3(0, 0, -1), 12));
+		maxDist = min(maxDist, sdPlane(p, Vec3(0, -1, 0), 3));
+		maxDist = min(maxDist, sdPlane(p, Vec3(0, 1, 0), 3));
+		maxDist = min(maxDist, sdPlane(p, Vec3(1, 0, 0), 4));
+		maxDist = min(maxDist, sdPlane(p, Vec3(-1, 0, 0), 4));
+
+		return maxDist;
 	}
 
-	__global__ void march(float *mesh, bool *isSubject, float *points)
-	{
-		int subject_id = threadIdx.x + 32*blockIdx.x + 640*(threadIdx.y + 32*blockIdx.y);
-		int mesh_id = 3*subject_id;
-		Vec3 currentPoint(mesh[mesh_id], mesh[mesh_id+1], mesh[mesh_id+2]);
-		Vec3 direction = currentPoint.normalize();
+	__device__ Vec3 march(Vec3 &from, Vec3 &to, float maxDistance, bool *hit, float epsilon=0.001) {
+		Vec3 direction = (to - from).normalize();
 		float distance = 0.0;
-		while (distance < 10) {
+		Vec3 currentPoint = from + direction * distance;
+		while (distance < maxDistance) {
 			float marchDistance = getDistance(currentPoint);
-			if (marchDistance < 0.001) {
-				isSubject[subject_id] = true;
-				points[mesh_id] = currentPoint.x;
-				points[mesh_id+1] = currentPoint.y;
-				points[mesh_id+2] = currentPoint.z;
-				break;
+			if (marchDistance < epsilon) {
+				*hit = true;
+				return (currentPoint);
 			}
 			distance += marchDistance;
-			currentPoint = direction * distance;
+			currentPoint = from + direction*distance;
 		}
+		return (from + direction*maxDistance);
 	}
-	__global__ void shade(float *points, bool *isSubject, float *display, float sourcex, float sourcey, float sourcez) {
-		int subject_id = threadIdx.x + 32*blockIdx.x + 640*(threadIdx.y + 32*blockIdx.y);
-		int mesh_id = 3*subject_id;
-		if (isSubject[subject_id]) {
-			float mainx = points[mesh_id];
-			float mainy = points[mesh_id+1];
-			float mainz = points[mesh_id+2];
-			float maindist = getDistance(Vec3(mainx, mainy, mainz));
-			float normx = getDistance(Vec3(mainx+0.001, mainy, mainz)) - maindist;
-			float normy = getDistance(Vec3(mainx, mainy+0.001, mainz)) - maindist;
-			float normz = getDistance(Vec3(mainx, mainy, mainz+0.001)) - maindist;
 
-			Vec3 unitNorm = Vec3(normx, normy, normz).normalize();
-			Vec3 unitSource = Vec3(sourcex, sourcey, sourcez).normalize();
+	__global__ void render(float *mesh, float *display, float sourcex, float sourcey, float sourcez)
+	{
+		int pixel_id = threadIdx.x + 32*blockIdx.x + 640*(threadIdx.y + 32*blockIdx.y);
+		int mesh_id = 3*pixel_id;
 
-			float intensity = Vec3::dot(unitNorm, unitSource);
+		bool hit = false;
+		Vec3 point = march(Vec3(0, 0, 0), Vec3(mesh[mesh_id], mesh[mesh_id+1], mesh[mesh_id+2]), 15, &hit);
 
-			if (intensity < 0)
-				intensity = 0;
-			display[subject_id] = intensity;
+		display[pixel_id] = 0;
+		if (hit) {
+			display[pixel_id] = 0.05;
+			// compute surface normal
+			float maindist = getDistance(point);
+			float normx = getDistance(point + Vec3(0.001, 0, 0)) - maindist;
+			float normy = getDistance(point + Vec3(0, 0.001, 0)) - maindist;
+			float normz = getDistance(point + Vec3(0, 0, 0.001)) - maindist;
+			Vec3 normal = Vec3(normx, normy, normz).normalize();
+
+			// for each source
+			bool isShadow = false;
+			Vec3 source = Vec3(sourcex, sourcey, sourcez);
+			Vec3 startP = (point + normal * 0.01);
+			float maxMarchDistance = (source - startP).mag();
+			march(startP, source, 10, &isShadow);
+			if (!isShadow) {
+				float intensity = Vec3::dot(normal, (source - point).normalize());
+				if (intensity < 0) intensity = 0;
+				display[pixel_id] = intensity;
+			}
 		}
-		else
-			display[subject_id] = 0;
 	}
 	"""
 mod = SourceModule(vec3Source+kernelString)
-march = mod.get_function('march')
-shade = mod.get_function('shade')
-isSubject_ref = np.zeros((480, 640)).astype(np.bool)
+render = mod.get_function('render')
+# shade = mod.get_function('shade')
+# isSubject_ref = np.zeros((480, 640)).astype(np.bool)
 buffer_ref = np.zeros((480, 640)).astype(np.float32)
 
 ASPECT_RATIO = 4/3.;
@@ -72,16 +87,15 @@ y = np.linspace(-ylim, ylim, 480)
 MESH = np.dstack(np.meshgrid(x, y, 1.)).astype(np.float32)
 
 mesh_gpu = cuda.mem_alloc(MESH.nbytes)
-isSubject_gpu = cuda.mem_alloc(MESH.nbytes//12)
-points_gpu = cuda.mem_alloc(MESH.nbytes)
+# isSubject_gpu = cuda.mem_alloc(isSubject_ref.nbytes)
+# points_gpu = cuda.mem_alloc(MESH.nbytes)
 display_gpu = cuda.mem_alloc(buffer_ref.nbytes)
 
 cuda.memcpy_htod(mesh_gpu, MESH)
-buffer_final = buffer_ref
 
 def getFrame(x, y, z):
-	march(mesh_gpu, isSubject_gpu, points_gpu, block=(32, 32, 1), grid=(20, 15, 1))
-	shade(points_gpu, isSubject_gpu, display_gpu, np.float32(x), np.float32(y), np.float32(z), block=(32, 32, 1), grid=(20, 15, 1))
+	render(mesh_gpu, display_gpu, np.float32(x), np.float32(y), np.float32(z), block=(32, 32, 1), grid=(20, 15, 1))
+	# shade(points_gpu, isSubject_gpu, display_gpu, np.float32(x), np.float32(y), np.float32(z), block=(32, 32, 1), grid=(20, 15, 1))
 	cuda.memcpy_dtoh(buffer_ref, display_gpu)
 	frame = (255*buffer_ref).astype(np.uint8)
 	return frame
@@ -93,7 +107,7 @@ angle1 = 0.
 angle2 = 0.
 while True:
 	t1 = time.time()
-	frame = getFrame(10*np.sin(angle1), 10*np.sin(angle2), 10*np.cos(angle1)*np.cos(angle2))
+	frame = getFrame(np.sin(angle1), np.cos(angle1)*np.sin(angle2), 6+np.cos(angle1)*np.cos(angle2))
 	cv2.imshow('disp', frame)
 	angle1 += 0.01
 	angle2 += 0.00834

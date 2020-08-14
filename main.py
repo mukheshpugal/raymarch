@@ -6,9 +6,9 @@ from subjects import Sphere, Plane
 from source import PointSource
 
 subjects = [
-	Sphere(np.array([0, -1, 7]), 1., 1.),
+	Sphere(np.array([-0.5, -0.5, 7]), 1., 1.),
 	Sphere(np.array([0, 0, 7]), 1., 1.),
-	Sphere(np.array([1.732/2, -0.5, 7]), 1., 1.)
+	Sphere(np.array([1.732/2, -0.2, 7]), 1., 1.)
 	# Plane(np.array([0, -1, 0]), np.array([0, 0, 7]))
 	]
 sources = [

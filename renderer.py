@@ -67,11 +67,6 @@ class Renderer():
 				}
 			"""):
 		self.elementsSet = True
-		self.distanceFunc_gpu = """
-			__device__ float getDistance(Vec3 &p) {
-				float d = (p - Vec3(0.0, 0.0, 7.0)).mag();
-				return (d - 1);
-			}"""
 		if self.useGPU:
 			distanceFunc_gpu = minFunction + '__device__ float getDistance(Vec3 p) {float minDist = '+str(self.FAR_CLIPPING_PLANE)+';'
 			for subject in subjects:
