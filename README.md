@@ -7,7 +7,7 @@ Run `python main.py`.<br>
 Also run `pygp.py`.
 
 ## To do
-- [ ] fix shadow-cast issues
+- [x] fix shadow-cast issues
 - [ ] multiple light sources
 - [ ] camera pose
   - [ ] stack system
