@@ -51,7 +51,7 @@ kernelString = """
 
 		display[pixel_id] = 0;
 		if (hit) {
-			//display[pixel_id] = 0.5;
+			display[pixel_id] = 0.1;
 			// compute surface normal
 			float maindist = getDistance(point);
 			float normx = getDistance(point + Vec3(0.0001, 0, 0)) - maindist;
@@ -66,9 +66,11 @@ kernelString = """
 			float maxMarchDistance = (source - startP).mag();
 			march(startP, source, maxMarchDistance, &isShadow);
 			if (!isShadow) {
-				float intensity = Vec3::dot(normal, (source - point).normalize());
+				float intensityLambertian = Vec3::dot(normal, (source - point).normalize());
+				float intensityBlinnPhong = powf(Vec3::dot(normal, ((point*-1).normalize() + (source - point).normalize()) / 2), 10);
+				float intensity = 0.9*(0.2*intensityLambertian + 0.8*intensityBlinnPhong);
 				if (intensity < 0) intensity = 0;
-				display[pixel_id] = intensity;
+				display[pixel_id] += intensity;
 			}
 		}
 	}
