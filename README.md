@@ -17,6 +17,8 @@ Requires cuda to run on GPU. Runs at ~0.02FPS on CPU whereas ~150FPS on GPU.
   - [ ] abstract methods for transformations
 - [ ] spherical mesh
 - [ ] color blending
+- [ ] Anti aliasing
+  - [ ] AI upsampling?
 - [ ] soft shadows
   - [ ] surface emmitance
   - [ ] volumetric lighting
