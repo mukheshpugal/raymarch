@@ -27,4 +27,7 @@ class Vec3 {
 	__device__ Vec3 operator * (float s) {
 		return (Vec3(s*x, s*y, s*z));
 	}
+	__device__ Vec3 mod(float a, float b, float c) {
+		return (Vec3(fmodf(x, a), fmodf(y, b), fmodf(z, c)));
+	}
 };

@@ -7,6 +7,7 @@ Requires cuda to run on GPU.
 - Run `pip install -r requirements.txt`.
 - Run `pygp.py` for now (beta).
 - Run `python main.py` for the final version.
+- `q` to quit.
 
 ## To do
 - [x] fix shadow-cast issues

@@ -45,4 +45,4 @@ while True:
 	cv2.imshow('disp', frame)
 	if cv2.waitKey(1) & 0xff == ord('q'):
 		break
-	print((time.time() - t1)**-1)
+	print((time.time() - t1))
