@@ -1,7 +1,7 @@
 # raymarch
 A 3d renderer based on raymarching (WIP).
 Renders planes and spheres for now.<br>
-Requires cuda to run on GPU.
+Requires cuda to run on GPU. Runs at ~0.02FPS on CPU whereas ~100FPS on GPU.
 
 ## To run
 - Run `pip install -r requirements.txt`.
