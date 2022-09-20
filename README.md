@@ -19,21 +19,11 @@ A 3d renderer based on raymarching. Uses CUDA to accelerate renders.
     <i>Artifacts due to gif compression</i>
 </p>
 
-Checkout `main.py` for the above animation.
+> Checkout `main.py` for the above animation.
 
 ### Scene
 
-The scene is the main class that contains all the objects, light sources and the cameras in the scene.
-
-#### Objects
-
-There are three types of objects that can be placed in the scene: spheres, planes and point light sources.
-
-#### Cameras
-
-Cameras can be initialized with different parameters such as fov, aspect ratio and resolution. Multiple cameras can be within a same scene and `scene.render()` renders views from all cameras in the scene.
-
-#### Example
+The scene is the main class that contains all the objects, light sources and the cameras in the scene. Example usage:
 
 ```py
 scene = Scene(
@@ -56,7 +46,13 @@ scene = Scene(
 scene.render() # Returns a dict of np.arrays. An entry for each camera.
 ```
 
-#### Transformations
+#### Objects
+
+There are three types of objects that can be placed in the scene: spheres, planes and point light sources.
+
+#### Cameras
+
+Cameras can be initialized with different parameters such as fov, aspect ratio and resolution. Multiple cameras can be within a same scene and `scene.render()` renders views from all cameras in the scene.
 
 Transformations can be applied to the cameras in order to position them.
 
