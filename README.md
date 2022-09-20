@@ -1,31 +1,22 @@
-# raymarch
-A 3d renderer based on raymarching (WIP).
-Renders planes and spheres for now.<br>
+# Raymarch
+
+A 3d renderer based on raymarching. Uses CUDA to accelerate renders.
 
 <p align="center">
-    <img src="https://user-images.githubusercontent.com/39578914/139380567-fed4bcb7-a71b-48db-87ad-33d278ccc0a9.gif" alt="vid" />
+    <img src="https://user-images.githubusercontent.com/39578914/191189139-42f00c49-0c71-4a90-9c0b-ad2feebc2809.png" alt="im" />
 </p>
 
-Requires cuda to run on GPU. Runs at ~0.02FPS on CPU whereas ~100FPS on GPU.
+## Installation
 
-## To run
-- Run `pip install -r requirements.txt`.
-- Run `pygp.py` for now (beta).
-- Run `python main.py` for the final version.
-- `q` to quit.
+- This program requires [`cuda`](https://developer.nvidia.com/cuda-toolkit) to be installed.
+- Install python prerequisites with `pip install -r requirements.txt`. (`openCV` is only needed to display the frames)
 
-## To do
-- [x] fix shadow-cast issues
-- [ ] python handle for subjects
-- [ ] multiple light sources
-- [ ] camera pose
-  - [ ] stack system
-  - [ ] abstract methods for transformations
-- [ ] spherical mesh
-- [ ] color blending
-- [ ] soft shadows
-  - [ ] surface emmitance
-  - [ ] volumetric lighting
-- [ ] lens blur
-- [ ] reflections and refractions?
-- [ ] physics simulator?
+## Usage
+
+<p align="center">
+    <img src="assets/vid.gif" alt="vid" />
+    <br/>
+    <i>Artifacts due to gif compression</i>
+</p>
+
+Checkout `main.py` for the above animation.
