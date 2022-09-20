@@ -19,8 +19,9 @@ class Translate(Transformation):
 
 
 class Rotate(Transformation):
-    def __init__(self, x, y, z):
+    def __init__(self, vec):
         super().__init__()
+        x, y, z = vec
         self.R = np.array(
             [
                 [

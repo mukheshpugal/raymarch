@@ -5,7 +5,7 @@ from raymarch import mod
 
 
 class Camera:
-    def __init__(self, aspect_ratio=4 / 3, fov=np.pi / 3, near=1, far=20):
+    def __init__(self, aspect_ratio=4 / 3, fov=np.pi / 3, near=1, far=20, xres=640, yres=480):
         self.aspect_ratio = aspect_ratio
         self.fov = fov
         self.near = near
@@ -13,14 +13,14 @@ class Camera:
 
         xlim = near * np.tan(fov / 2)
         ylim = -xlim / aspect_ratio
-        x = np.linspace(-xlim, xlim, 640)
-        y = np.linspace(-ylim, ylim, 480)
+        x = np.linspace(-xlim, xlim, xres)
+        y = np.linspace(-ylim, ylim, yres)
         pixelgrid = np.dstack(np.meshgrid(x, y, near)).astype(np.float32)
 
         self.pixelgrid_gpu = cuda.mem_alloc(pixelgrid.nbytes)
         cuda.memcpy_htod(self.pixelgrid_gpu, pixelgrid)
 
-        self.surface = np.zeros((480, 640, 3)).astype(np.float32)
+        self.surface = np.zeros((yres, xres, 3)).astype(np.float32)
         self.surface_gpu = cuda.mem_alloc(self.surface.nbytes)
 
         self.clearMatrix()
