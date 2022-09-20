@@ -20,5 +20,3 @@ A 3d renderer based on raymarching. Uses CUDA to accelerate renders.
 </p>
 
 Checkout `main.py` for the above animation.
-
-
